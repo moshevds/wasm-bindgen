@@ -503,7 +503,7 @@ impl<'a> Context<'a> {
 
         let js = format!(
             "\
-                function init(module{init_memory_arg}) {{
+                function init(module, do_sync{init_memory_arg}) {{
                     {default_module_path}
                     let result;
                     const imports = {{}};
@@ -534,6 +534,13 @@ impl<'a> Context<'a> {
                                 .then(r => r.arrayBuffer())
                                 .then(bytes => WebAssembly.instantiate(bytes, imports));
                         }}
+                    }} else if (do_sync) {{
+                            result = {{
+                                'then': onFulfilled => onFulfilled( {{
+                                    instance: new WebAssembly.Instance(module, imports),
+                                    module: module
+                                }} )
+                            }};
                     }} else {{
                         {init_memory1}
                         result = WebAssembly.instantiate(module, imports)
